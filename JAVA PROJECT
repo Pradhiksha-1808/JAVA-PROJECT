@@ -1,0 +1,140 @@
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+public class NewsPortalApp extends Frame {
+    private HashMap<String, String> users = new HashMap<>();
+    private HashMap<String, ArrayList<String>> newsCategories = new HashMap<>();
+    private final String ADMIN_USERNAME = "admin";
+    private final String ADMIN_PASSWORD = "123";
+    CardLayout cardLayout = new CardLayout();
+    Panel mainPanel = new Panel();
+    List categoryList = new List();
+    public NewsPortalApp() {
+        setTitle("News Portal System");
+        setSize(600, 400);
+        setLayout(new BorderLayout());
+        mainPanel.setLayout(cardLayout);
+        mainPanel.add(createHomePanel(), "Home");
+        mainPanel.add(createUserPanel(), "User");
+        mainPanel.add(createAdminPanel(), "Admin");
+        add(mainPanel, BorderLayout.CENTER);
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                System.exit(0);
+            }
+        });
+        setVisible(true);
+    }
+    private Panel createHomePanel() {
+        Panel homePanel = new Panel(new GridLayout(5, 2, 10, 10));
+        Label lblTitle = new Label("News Portal System", Label.CENTER);
+        lblTitle.setFont(new Font("Arial", Font.BOLD, 18));
+        homePanel.add(lblTitle);
+        homePanel.add(new Label("")); 
+        Label lblUsername = new Label("Username:");
+        TextField txtUsername = new TextField();
+        Label lblPassword = new Label("Password:");
+        TextField txtPassword = new TextField();
+        txtPassword.setEchoChar('*');
+        Button btnLogin = new Button("Login");
+        Button btnRegister = new Button("Register");
+        homePanel.add(lblUsername);
+        homePanel.add(txtUsername);
+        homePanel.add(lblPassword);
+        homePanel.add(txtPassword);
+        homePanel.add(btnLogin);
+        homePanel.add(btnRegister);
+        Label lblMessage = new Label("", Label.CENTER);
+        homePanel.add(lblMessage);
+        homePanel.add(new Label("")); 
+        btnLogin.addActionListener(e -> {
+            String username = txtUsername.getText();
+            String password = txtPassword.getText();
+            if (username.equals(ADMIN_USERNAME) && password.equals(ADMIN_PASSWORD)) {
+                cardLayout.show(mainPanel, "Admin");
+            } else if (users.containsKey(username) && users.get(username).equals(password)) {
+                updateCategoryList();
+                cardLayout.show(mainPanel, "User");
+            } else {
+                lblMessage.setText("Invalid credentials!");
+            }
+        });
+        btnRegister.addActionListener(e -> {
+            String username = txtUsername.getText();
+            String password = txtPassword.getText();
+            if (!username.isEmpty() && !password.isEmpty()) {
+                users.put(username, password);
+                lblMessage.setText("Registration successful!");
+            } else {
+                lblMessage.setText("Please fill all fields!");
+            }
+        });
+        return homePanel;
+    }
+    private Panel createUserPanel() {
+        Panel userPanel = new Panel(new BorderLayout());
+        TextArea newsArea = new TextArea();
+        Button btnBack = new Button("Back");
+        userPanel.add(new Label("Select a Category:"), BorderLayout.NORTH);
+        userPanel.add(categoryList, BorderLayout.WEST);
+        userPanel.add(newsArea, BorderLayout.CENTER);
+        userPanel.add(btnBack, BorderLayout.SOUTH);
+        btnBack.addActionListener(e -> cardLayout.show(mainPanel, "Home"));
+        categoryList.addActionListener(e -> {
+            String selectedCategory = categoryList.getSelectedItem();
+            ArrayList<String> articles = newsCategories.getOrDefault(selectedCategory, new ArrayList<>());
+            newsArea.setText(String.join("\n\n", articles));
+        });
+        return userPanel;
+    }
+    private Panel createAdminPanel() {
+        Panel adminPanel = new Panel(new BorderLayout());
+        Panel inputPanel = new Panel(new GridLayout(4, 2, 5, 5));
+        Label lblCategory = new Label("Category:");
+        TextField txtCategory = new TextField();
+        Label lblArticle = new Label("Article:");
+        TextField txtArticle = new TextField();
+        Button btnAdd = new Button("Add Article");
+        Button btnRemove = new Button("Remove Category");
+        inputPanel.add(lblCategory);
+        inputPanel.add(txtCategory);
+        inputPanel.add(lblArticle);
+        inputPanel.add(txtArticle);
+        inputPanel.add(btnAdd);
+        inputPanel.add(btnRemove);
+        adminPanel.add(inputPanel, BorderLayout.CENTER);
+        Button btnBack = new Button("Back");
+        adminPanel.add(btnBack, BorderLayout.SOUTH);
+        btnBack.addActionListener(e -> cardLayout.show(mainPanel, "Home"));
+        btnAdd.addActionListener(e -> {
+            String category = txtCategory.getText();
+            String article = txtArticle.getText();
+            if (!category.isEmpty() && !article.isEmpty()) {
+                newsCategories.putIfAbsent(category, new ArrayList<>());
+                newsCategories.get(category).add(article);
+                txtCategory.setText("");
+                txtArticle.setText("");
+                updateCategoryList(); 
+            }
+        });
+        btnRemove.addActionListener(e -> {
+            String category = txtCategory.getText();
+            if (newsCategories.containsKey(category)) {
+                newsCategories.remove(category);
+                txtCategory.setText("");
+                updateCategoryList(); 
+            }
+        });
+        return adminPanel;
+    }
+    private void updateCategoryList() {
+        categoryList.removeAll(); 
+        for (String category : newsCategories.keySet()) {
+            categoryList.add(category);
+        }
+    }
+    public static void main(String[] args) {
+        new NewsPortalApp();
+    }
+}
